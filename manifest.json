@@ -1,0 +1,15 @@
+{
+  "short_name": "LearnVault",
+  "name": "LearnVault Free Learning",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#A0522D",
+  "background_color": "#3C2F2F"
+}
