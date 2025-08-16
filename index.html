@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="description" content="LearnVault: Your free hub for discovering and curating online learning resources in AI, coding, and digital marketing.">
+  <meta name="keywords" content="free learning resources, AI courses, coding tutorials, digital marketing, online education">
+  <meta property="og:title" content="LearnVault - Free Learning Resources">
+  <meta property="og:image" content="https://source.unsplash.com/random/1200x630/?learning">
+  <meta property="og:description" content="Discover curated free online resources for emerging skills like AI, coding, and digital marketing.">
+  <title>LearnVault</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,800;0,900;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@latest/dist/fuse.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #3C2F2F 0%, #6B4E31 50%, #2A1E1E 100%);
+      color: #E8D5B9;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+      padding-top: 0;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(40px);
+      animation: fadeIn 1.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .resource-card {
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+      background: rgba(44, 33, 24, 0.7);
+      border: 1px solid #6B4E31;
+      border-radius: 16px;
+      overflow: hidden;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .resource-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 24px rgba(107, 78, 49, 0.5);
+    }
+    .cta-button {
+      background: linear-gradient(45deg, #8B4513, #A0522D);
+      transition: all 0.4s ease;
+      border-radius: 50px;
+      padding: 14px 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(139, 69, 19, 0.5);
+    }
+    .cta-button:hover {
+      background: linear-gradient(45deg, #A0522D, #8B4513);
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(139, 69, 19, 0.6);
+    }
+    .cta-button:focus {
+      outline: 2px solid #A0522D;
+      outline-offset: 2px;
+    }
+    .cta-button::before {
+      content: '';
+      position: absolute;
+      top: -100%;
+      left: -100%;
+      width: 300%;
+      height: 300%;
+      background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(232, 213, 185, 0.2),
+        transparent
+      );
+      transform: rotate(45deg);
+      animation: shine 4s ease-in-out infinite;
+    }
+    @keyframes shine {
+      0% { transform: translate(-100%, -100%) rotate(45deg); }
+      100% { transform: translate(100%, 100%) rotate(45deg); }
+    }
+    .header-bg {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      background: url('https://source.unsplash.com/random/1920x1080/?learning') no-repeat center;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+    }
+    .header-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(50, 37, 37, 0.85), rgba(30, 22, 22, 0.95));
+      z-index: -1;
+    }
+    .header-bg::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #8B4513, #A0522D, #6B4E31, #4A3728);
+      opacity: 0.3;
+      animation: gradientShift 20s ease-in-out infinite;
+      z-index: -2;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .glass-effect {
+      background: rgba(44, 33, 24, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(107, 78, 49, 0.3);
+      border-radius: 20px;
+      transition: all 0.4s ease;
+    }
+    .glass-effect:hover {
+      background: rgba(44, 33, 24, 0.8);
+      box-shadow: 0 8px 24px rgba(107, 78, 49, 0.3);
+    }
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+    .scroll-indicator.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .scroll-arrow {
+      width: 28px;
+      height: 28px;
+      border-right: 3px solid #A0522D;
+      border-bottom: 3px solid #A0522D;
+      transform: rotate(45deg);
+      animation: slideDown 2s infinite;
+    }
+    @keyframes slideDown {
+      0% { transform: translateY(0) rotate(45deg); opacity: 1; }
+      50% { transform: translateY(12px) rotate(45deg); opacity: 0.5; }
+      100% { transform: translateY(24px) rotate(45deg); opacity: 0; }
+    }
+    .highlight-text {
+      background: linear-gradient(90deg, #E8D5B9, #A0522D);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 800;
+    }
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      justify-items: center;
+    }
+    @media (min-width: 768px) {
+      .resource-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    @media (max-width: 576px) {
+      .header-bg {
+        min-height: 80vh;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      p {
+        font-size: 1rem;
+      }
+    }
+    .container {
+      max-width: 100%;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    @media (min-width: 640px) {
+      .container {
+        max-width: 640px;
+      }
+    }
+    @media (min-width: 768px) {
+      .container {
+        max-width: 768px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .container {
+        max-width: 900px;
+      }
+    }
+    /* Fixed header panel styles */
+    .fixed-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(44, 33, 24, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-100%);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .fixed-header.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fixed-header .name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #E8D5B9;
+    }
+  </style>
+</head>
+<body>
+  <!-- Fixed Header Panel -->
+  <div class="fixed-header">
+    <span class="name">LearnVault</span>
+  </div>
+
+  <!-- Header Section -->
+  <header class="header-bg py-16 md:py-24 shadow-2xl">
+    <div class="container mx-auto text-center flex flex-col items-center px-6">
+      <h1 class="text-5xl md:text-7xl font-black tracking-tight drop-shadow-2xl fade-in" style="animation-delay: 0.5s;">
+        <span class="highlight-text">LearnVault</span>
+      </h1>
+      <p class="mt-6 text-xl md:text-2xl font-semibold fade-in" style="animation-delay: 0.7s;">
+        Your Free Hub for Emerging Skills in AI, Coding, & Digital Marketing
+      </p>
+      <a href="#quiz" aria-label="Start Personalized Quiz" class="mt-10 inline-block px-10 py-5 text-xl font-semibold text-[#E8D5B9] cta-button fade-in" style="animation-delay: 0.9s;">
+        Take Quiz to Start
+      </a>
+      <div class="scroll-indicator fade-in" style="animation-delay: 1.1s;">
+        <div class="scroll-arrow"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- About Section -->
+  <section id="about" class="py-24 fade-in" style="animation-delay: 0.3s;">
+    <div class="container mx-auto px-6">
+      <h2 class="text-5xl md:text-6xl font-bold text-center mb-8">About LearnVault</h2>
+      <div class="glass-effect p-10 max-w-4xl mx-auto leading-relaxed text-lg md:text-xl">
+        LearnVault is a free, community-curated platform for discovering high-quality online learning resources. Focused on emerging skills like AI, coding, and digital marketing, we provide personalized recommendations, dynamic search, and progress tracking—all without any cost or backend servers.
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="py-24 bg-[#4A3728] fade-in" style="animation-delay: 0.5s;">
+    <div class="container mx-auto px-6">
+      <h2 class="text-5xl md:text-6xl font-bold text-center mb-8">Skill Categories</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div class="resource-card p-10 rounded-xl shadow-xl text-center glass-effect">
+          <h3 class="text-2xl font-semibold text-[#A0522D] mb-4">AI & Machine Learning</h3>
+          <p class="text-[#E8D5B9]">Explore free courses on artificial intelligence and ML.</p>
+        </div>
+        <div class="resource-card p-10 rounded-xl shadow-xl text-center glass-effect">
+          <h3 class="text-2xl font-semibold text-[#A0522D] mb-4">Coding & Programming</h3>
+          <p class="text-[#E8D5B9]">Learn programming languages and web development for free.</p>
+        </div>
+        <div class="resource-card p-10 rounded-xl shadow-xl text-center glass-effect">
+          <h3 class="text-2xl font-semibold text-[#A0522D] mb-4">Digital Marketing</h3>
+          <p class="text-[#E8D5B9]">Master SEO, social media, and online marketing strategies.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz Section -->
+  <section id="quiz" class="py-24 fade-in" style="animation-delay: 0.7s;">
+    <div class="container mx-auto px-6">
+      <h2 class="text-5xl md:text-6xl font-bold text-center mb-8">Personalized Learning Path</h2>
+      <div class="glass-effect p-10 max-w-4xl mx-auto">
+        <p class="text-center mb-6">Answer a few questions to get a tailored list of resources.</p>
+        <form id="quiz-form">
+          <div class="mb-4">
+            <label class="block text-lg mb-2">What skill interests you most?</label>
+            <select id="interest" class="w-full p-2 rounded bg-[#6B4E31] text-[#E8D5B9]">
+              <option value="AI">AI & Machine Learning</option>
+              <option value="Coding">Coding & Programming</option>
+              <option value="Digital Marketing">Digital Marketing</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-lg mb-2">Your experience level?</label>
+            <select id="level" class="w-full p-2 rounded bg-[#6B4E31] text-[#E8D5B9]">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-lg mb-2">Preferred format?</label>
+            <select id="format" class="w-full p-2 rounded bg-[#6B4E31] text-[#E8D5B9]">
+              <option value="Course">Course</option>
+              <option value="Video">Video</option>
+              <option value="Interactive">Interactive</option>
+            </select>
+          </div>
+          <button type="submit" class="cta-button w-full text-xl font-semibold text-[#E8D5B9]">Get Recommendations</button>
+        </form>
+        <div id="quiz-results" class="mt-6 hidden">
+          <h3 class="text-2xl font-semibold text-[#A0522D] mb-4">Your Personalized Path</h3>
+          <div id="recommended-resources" class="resource-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resources Section -->
+  <section id="resources" class="py-24 fade-in" style="animation-delay: 0.9s;">
+    <div class="container mx-auto px-6">
+      <h2 class="text-5xl md:text-6xl font-bold text-center mb-8">Resource Hub</h2>
+      <div class="glass-effect p-10 mb-10">
+        <input id="search-input" type="text" placeholder="Search resources..." class="w-full p-4 rounded bg-[#6B4E31] text-[#E8D5B9] mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <select id="category-filter" class="p-2 rounded bg-[#6B4E31] text-[#E8D5B9]">
+            <option value="">All Categories</option>
+            <option value="AI">AI</option>
+            <option value="Coding">Coding</option>
+            <option value="Digital Marketing">Digital Marketing</option>
+          </select>
+          <select id="level-filter" class="p-2 rounded bg-[#6B4E31] text-[#E8D5B9]">
+            <option value="">All Levels</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+          <select id="format-filter" class="p-2 rounded bg-[#6B4E31] text-[#E8D5B9]">
+            <option value="">All Formats</option>
+            <option value="Course">Course</option>
+            <option value="Video Lectures">Video Lectures</option>
+            <option value="Interactive Course">Interactive Course</option>
+          </select>
+        </div>
+      </div>
+      <div id="resource-grid" class="resource-grid"></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gradient-to-r from-[#3C2F2F] to-[#2A1E1E] text-[#E8D5B9] py-12 border-t border-[#6B4E31]">
+    <div class="container mx-auto text-center">
+      <p>© 2025 LearnVault. All rights reserved. Built with love by Muhammed Shadil MP.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Sample Resources Data
+    const resources = [
+      {
+        title: "AI For Everyone",
+        url: "https://www.coursera.org/learn/ai-for-everyone",
+        description: "Non-technical introduction to AI concepts.",
+        category: "AI",
+        level: "Beginner",
+        format: "Course",
+        duration: "6 hours"
+      },
+      {
+        title: "Elements of AI",
+        url: "https://www.elementsofai.com/",
+        description: "Free online course on AI basics.",
+        category: "AI",
+        level: "Beginner",
+        format: "Course",
+        duration: "30 hours"
+      },
+      {
+        title: "freeCodeCamp",
+        url: "https://www.freecodecamp.org/",
+        description: "Full-stack web development curriculum.",
+        category: "Coding",
+        level: "Beginner",
+        format: "Interactive Course",
+        duration: "300+ hours"
+      },
+      {
+        title: "CS50's Introduction to Programming with Python",
+        url: "https://cs50.harvard.edu/python/2022/",
+        description: "Harvard's free Python course.",
+        category: "Coding",
+        level: "Beginner",
+        format: "Video Lectures",
+        duration: "10 weeks"
+      },
+      {
+        title: "Fundamentals of Digital Marketing",
+        url: "https://learndigital.withgoogle.com/digitalgarage/course/digital-marketing",
+        description: "Google's free digital marketing course.",
+        category: "Digital Marketing",
+        level: "Beginner",
+        format: "Course",
+        duration: "40 hours"
+      },
+      {
+        title: "HubSpot Inbound Marketing Certification",
+        url: "https://academy.hubspot.com/courses/inbound-marketing",
+        description: "Free certification on inbound marketing.",
+        category: "Digital Marketing",
+        level: "Beginner",
+        format: "Course",
+        duration: "5 hours"
+      },
+      {
+        title: "Introduction to Artificial Intelligence with Python",
+        url: "https://cs50.harvard.edu/ai/2020/",
+        description: "Harvard's AI course using Python.",
+        category: "AI",
+        level: "Intermediate",
+        format: "Course",
+        duration: "7 weeks"
+      },
+      {
+        title: "Machine Learning by Andrew Ng",
+        url: "https://www.coursera.org/learn/machine-learning",
+        description: "Classic machine learning course (free to audit).",
+        category: "AI",
+        level: "Intermediate",
+        format: "Course",
+        duration: "61 hours"
+      },
+      {
+        title: "Codecademy Learn HTML",
+        url: "https://www.codecademy.com/learn/learn-html",
+        description: "Free interactive HTML course.",
+        category: "Coding",
+        level: "Beginner",
+        format: "Interactive Course",
+        duration: "9 hours"
+      },
+      {
+        title: "Google Analytics for Beginners",
+        url: "https://analytics.google.com/analytics/academy/course/6",
+        description: "Free Google Analytics course.",
+        category: "Digital Marketing",
+        level: "Beginner",
+        format: "Course",
+        duration: "4-6 hours"
+      }
+      // Add more resources as needed
+    ];
+
+    // Fuse.js for search
+    const fuse = new Fuse(resources, {
+      keys: ['title', 'description', 'category'],
+      threshold: 0.3
+    });
+
+    // Render resources
+    function renderResources(filteredResources) {
+      const grid = document.getElementById('resource-grid');
+      grid.innerHTML = '';
+      filteredResources.forEach(resource => {
+        const card = document.createElement('div');
+        card.className = 'resource-card p-10 rounded-xl shadow-xl glass-effect';
+        card.innerHTML = `
+          <h3 class="text-2xl font-semibold text-[#A0522D] mb-4">${resource.title}</h3>
+          <p class="text-[#E8D5B9] mb-2">${resource.description}</p>
+          <p class="text-[#E8D5B9] mb-2">Category: ${resource.category}</p>
+          <p class="text-[#E8D5B9] mb-2">Level: ${resource.level}</p>
+          <p class="text-[#E8D5B9] mb-4">Duration: ${resource.duration}</p>
+          <a href="${resource.url}" target="_blank" class="text-[#A0522D] font-semibold inline-block hover:text-[#8B4513] transition-colors">
+            Access Resource
+          </a>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Initial render
+    renderResources(resources);
+
+    // Search and filter logic
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+    const levelFilter = document.getElementById('level-filter');
+    const formatFilter = document.getElementById('format-filter');
+
+    function applyFilters() {
+      let filtered = resources;
+      const query = searchInput.value;
+      if (query) {
+        filtered = fuse.search(query).map(result => result.item);
+      }
+      const category = categoryFilter.value;
+      if (category) {
+        filtered = filtered.filter(r => r.category === category);
+      }
+      const level = levelFilter.value;
+      if (level) {
+        filtered = filtered.filter(r => r.level === level);
+      }
+      const format = formatFilter.value;
+      if (format) {
+        filtered = filtered.filter(r => r.format === format);
+      }
+      renderResources(filtered);
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    categoryFilter.addEventListener('change', applyFilters);
+    levelFilter.addEventListener('change', applyFilters);
+    formatFilter.addEventListener('change', applyFilters);
+
+    // Quiz logic
+    const quizForm = document.getElementById('quiz-form');
+    const quizResults = document.getElementById('quiz-results');
+    const recommendedResources = document.getElementById('recommended-resources');
+
+    quizForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const interest = document.getElementById('interest').value;
+      const level = document.getElementById('level').value;
+      const format = document.getElementById('format').value;
+      let recommended = resources.filter(r => r.category === interest && r.level === level && r.format.includes(format));
+      recommendedResources.innerHTML = '';
+      recommended.forEach(resource => {
+        const card = document.createElement('div');
+        card.className = 'resource-card p-10 rounded-xl shadow-xl glass-effect';
+        card.innerHTML = `
+          <h3 class="text-2xl font-semibold text-[#A0522D] mb-4">${resource.title}</h3>
+          <p class="text-[#E8D5B9] mb-2">${resource.description}</p>
+          <a href="${resource.url}" target="_blank" class="text-[#A0522D] font-semibold inline-block hover:text-[#8B4513] transition-colors">
+            Start Learning
+          </a>
+        `;
+        recommendedResources.appendChild(card);
+      });
+      quizResults.classList.remove('hidden');
+    });
+
+    // Fade-in and scroll effects
+    document.addEventListener('DOMContentLoaded', () => {
+      const elements = document.querySelectorAll('.fade-in');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+          }
+        });
+      }, { threshold: 0.2 });
+      elements.forEach(element => observer.observe(element));
+
+      const scrollIndicator = document.querySelector('.scroll-indicator');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 100) {
+          scrollIndicator.classList.add('hidden');
+        } else {
+          scrollIndicator.classList.remove('hidden');
+        }
+      });
+
+      window.addEventListener('scroll', () => {
+        const header = document.querySelector('.header-bg');
+        const scrollPosition = window.scrollY;
+        header.style.backgroundPositionY = `${scrollPosition * 0.5}px`;
+
+        const fixedHeader = document.querySelector('.fixed-header');
+        const aboutSection = document.querySelector('#about');
+        const aboutRect = aboutSection.getBoundingClientRect();
+        if (aboutRect.top <= 0) {
+          fixedHeader.classList.add('active');
+        } else {
+          fixedHeader.classList.remove('active');
+        }
+      });
+    });
+
+    // PWA Setup (add manifest and service worker for offline)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(() => console.log('Service Worker Registered'));
+    }
+  </script>
+</body>
+</html>
